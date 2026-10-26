@@ -30,7 +30,7 @@ npm run dev
 按终端提示访问开发服务器。无需数据库、后端或 API 密钥。
 
 ```sh
-npm test             # 评分与内容逻辑：16 项
+npm test             # 评分、内容与打包：19 项
 npm run build        # 生产站点 -> dist/
 npm run preview      # 预览生产站点
 npm run package      # 额外生成 release/心动放映室.html 单文件版
@@ -51,7 +51,7 @@ npm run test:e2e
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 ```
 
-12 项端到端测试覆盖完整答题、未知结局、回退改答、刷新恢复、重开确认、弹窗焦点、隐私清除、键盘操作、手机排版及真实 PNG 下载。
+13 项端到端测试覆盖完整答题、未知结局、回退改答、刷新恢复、重开确认、弹窗焦点、隐私清除、键盘操作、手机排版及真实 PNG 下载。
 
 ## 发布为公开网站
 
