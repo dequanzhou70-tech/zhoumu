@@ -22,7 +22,7 @@ npm run dev
 按终端提示访问开发服务器。无需数据库、后端或 API 密钥。
 
 ```sh
-npm test             # 评分与内容逻辑：11 项
+npm test             # 评分与内容逻辑：12 项
 npm run build        # 生产站点 -> dist/
 npm run preview      # 预览生产站点
 npm run package      # 额外生成 release/心动放映室.html 单文件版

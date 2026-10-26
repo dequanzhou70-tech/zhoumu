@@ -218,9 +218,12 @@ export function getResult(answers = [], context = {}) {
   if (['slow', '慢热', '比较慢热'].includes(context.style)) caution += ' 你提到 TA 比较慢热，可以多观察稳定行动，不用只看聊天频率。';
   if (context.relation === 'online' || context.relation === '主要在线上') caution += ' 线上互动提供的信息有限，暂不把见面相关的空白当成负面信号。';
   const result = { ...resultTypes[id], id, score, confidence: count >= 8 ? '线索充足' : count >= 4 ? '线索有限' : '线索不足', dimensions, evidence: [...new Set(evidence)].slice(0, 3), caution, knownCount: count };
-  if (boundary && boundary.signal !== null && boundary.signal <= 1 && count >= 4) {
-    result.description = '你记录了一些靠近，但也记录了边界没有被好好尊重。无论 TA 是否有好感，这一点都比暧昧的高光更值得认真对待。你不需要用委屈自己来换一段关系。';
+  if (boundary && boundary.signal !== null && boundary.signal <= 1) {
+    result.description = '你记录的互动里，边界没有被好好尊重。无论 TA 是否有好感，这一点都比暧昧的高光更值得认真对待。你不需要用委屈自己来换一段关系。';
+    if (count < 4) result.description = '目前线索还不足以整理你们的关系，但你已经记录了边界没有被好好尊重。无论 TA 是否有好感，你的拒绝与感受都值得被尊重。';
     result.nextStep = '先照顾自己的感受与安全。清楚表达你的界限，观察对方是否真正调整行为；若施压或越界持续，减少接触，并向可信任的人寻求支持。';
+    result.quote = '你的界限，比任何故事结局都重要。';
+    result.caution += ' 已记录的施压或越界行为需要优先认真对待，线索较少也不影响你保护自己的边界。';
   }
   return result;
 }

@@ -132,8 +132,32 @@ test('privacy controls erase answers from the current session', async ({ page })
   expect(await page.evaluate(() => sessionStorage.getItem('crush-cinema:v1'))).toBeNull();
 });
 
-test('answers can be selected with Enter and Space and keep keyboard focus', async ({ page }) => {
-  await begin(page);
+test('interactive controls can use Enter and Space and keep keyboard focus', async ({ page }) => {
+  await page.goto('/');
+  const sound = page.locator('[data-action="sound"]');
+  await sound.focus();
+  await page.keyboard.press('Enter');
+  await expect(sound).toHaveAttribute('aria-pressed', 'true');
+  await expect(sound).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(sound).toHaveAttribute('aria-pressed', 'false');
+  await expect(sound).toBeFocused();
+  await page.locator('[data-action="start"]').click();
+  const relation = page.locator('[data-relation="主要在线上"]');
+  await relation.focus();
+  await page.keyboard.press('Enter');
+  await expect(relation).toHaveAttribute('aria-pressed', 'true');
+  await expect(relation).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('[data-style="比较主动"]')).toBeFocused();
+  const style = page.locator('[data-style="比较慢热"]');
+  await style.focus();
+  await page.keyboard.press('Enter');
+  await expect(style).toHaveAttribute('aria-pressed', 'true');
+  await expect(style).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('[data-style="还不确定"]')).toBeFocused();
+  await page.locator('[data-action="begin"]').click();
   const first = page.locator('[data-answer="0"]');
   await first.focus();
   await page.keyboard.press('Enter');

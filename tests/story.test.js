@@ -73,6 +73,22 @@ test('pressure or repeated boundary violations overrides otherwise glowing evide
   }
 });
 
+test('boundary concerns take priority even when there are too few observations to score', () => {
+  for (const boundaryAnswer of [0, 1]) {
+    const sparse = answers(4);
+    sparse[8] = boundaryAnswer;
+    const result = getResult(sparse);
+    assert.equal(result.score, null);
+    assert.equal(result.confidence, '线索不足');
+    assert.equal(result.knownCount, 1);
+    assert.match(result.description, /边界没有被好好尊重/);
+    assert.match(result.nextStep, /界限/);
+    assert.doesNotMatch(result.nextStep, /邀约|邀请|发起/);
+    assert.match(result.caution, /施压或越界/);
+    assert.ok(result.evidence.includes(scenes[8].options[boundaryAnswer].evidence));
+  }
+});
+
 test('respect and attention alone do not produce a romantic mutual ending', () => {
   const attentionOnly = answers(4);
   for (const index of [2, 3, 4, 8, 9]) attentionOnly[index] = 3;
