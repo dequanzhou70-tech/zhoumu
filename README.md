@@ -1,6 +1,6 @@
 # 心动放映室 · Crush Cinema
 
-一部关于「你和 TA」的轻互动电影。14 个真实相处的观察题（含 6 组图片选择），串起从深夜聊天到下一次邀约的 4 章故事，生成 12 种关系属性画像之一和可下载的专属海报。
+一部关于「你和 TA」的轻互动电影。14 个真实相处的观察题（含 6 组剧情图片选择），串起从深夜聊天到下一次邀约的 4 章故事，生成 12 种关系属性画像之一和可下载的专属海报。
 
 - 适配手机与电脑，支持键盘操作与减少动态效果偏好。
 - 背景选择、返回改答、刷新后手动恢复进度、重开确认。
@@ -30,13 +30,13 @@ npm run dev
 按终端提示访问开发服务器。无需数据库、后端或 API 密钥。
 
 ```sh
-npm test             # 评分、内容与打包：19 项
+npm test             # 评分、内容与打包：22 项
 npm run build        # 生产站点 -> dist/
 npm run preview      # 预览生产站点
 npm run package      # 额外生成 release/心动放映室.html 单文件版
 ```
 
-单文件版把 CSS、JavaScript 和图标都内联，不需要 CDN 资源。可下载后用允许本地 HTML 的浏览器打开；微信等应用内文件预览器可能不执行脚本，正式传播请使用公开网站链接。
+单文件版把 CSS、JavaScript、图标和剧情图片都内联，不需要 CDN 资源。带剧情图片的版本约 2.3 MB；构建时的大 JS 分块提示主要来自这些媒体资源。可下载后用允许本地 HTML 的浏览器打开；微信等应用内文件预览器可能不执行脚本，正式传播请使用公开网站链接。
 
 ## 浏览器测试
 
@@ -51,7 +51,7 @@ npm run test:e2e
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 ```
 
-13 项端到端测试覆盖完整答题、未知结局、回退改答、刷新恢复、重开确认、弹窗焦点、隐私清除、键盘操作、手机排版及真实 PNG 下载。
+14 项端到端测试覆盖完整答题、未知结局、回退改答、刷新恢复、重开确认、弹窗焦点、隐私清除、键盘操作、手机排版及真实 PNG 下载。
 
 ## 发布为公开网站
 
@@ -74,7 +74,9 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 - `src/main.js`：交互、会话恢复、海报与分享。
 - `src/style.css`：响应式电影票视觉。
 - `src/art.js`：首页本地 SVG 插画。
-- `src/visuals.js`：24 张图片选项插画、12 张属性插画；没有外部图像请求。
+- `src/visuals.js`：12 张属性插画。
+- `src/choice-scenes.js`：24 个选项逐一对应的分镜说明、对白和裁切位置。
+- `src/choice-illustrations.js` 与 `src/assets/story/`：6 组生成的剧情画面（共 24 个分镜），内联 WebP，不依赖外部图片服务。
 - `src/research.js`：5 篇参考文献、研究启发及适用局限。
 - `tests/`：评分单元测试和 Playwright 浏览器测试。
 - `.github/workflows/deploy.yml`：GitHub Pages 构建发布。

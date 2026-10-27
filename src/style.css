@@ -179,3 +179,23 @@ body{background:radial-gradient(ellipse at 85% 7%,#f9dbe74d 0,transparent 38%),v
 .story-card{padding:21px 15px}.visual-answers{gap:8px}.answer-bottom{padding:10px 8px;gap:6px}.answer-bottom .answer-copy{flex-basis:calc(100% - 29px)}.answer-bottom .answer-copy strong{font-size:12px}.answer-bottom .answer-copy small{font-size:10px}.answer-bottom .answer-key{width:18px;height:18px}.guidance-card{padding:21px 18px}.result-poster{padding:24px 22px}.result-poster h2{font-size:27px}.ending-grid{gap:8px}.ending-card{padding:10px}.ending-card h3{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Full scene panels: keep the comic's complete 3:2 frame visible. */
+.option-art{aspect-ratio:3/2;background:#fff1f6}
+.option-art>svg{width:100%;height:100%;display:block}
+.visual-prompt{font-size:12px;line-height:1.9;color:#a26e88;margin:-4px 0 6px;letter-spacing:.3px}
+.visual-casting-note{font-size:11px;line-height:1.9;color:#aa8297;margin:0 0 16px;letter-spacing:.1px}
+@media(max-width:560px){
+  .visual-answers{grid-template-columns:minmax(0,1fr);gap:15px}
+  .visual-answers .option-art{aspect-ratio:3/2}
+  .visual-answers .answer-bottom{padding:14px;gap:10px}
+  .visual-answers .answer-bottom .answer-copy{flex-basis:calc(100% - 31px)}
+  .visual-answers .answer-bottom .answer-copy strong{font-size:14px;line-height:1.75}
+  .visual-answers .answer-bottom .answer-copy small{font-size:12px;line-height:1.9;margin-top:5px}
+  .visual-answers .answer-bottom .answer-key{width:21px;height:21px;font-size:10px;margin-top:2px}
+  .visual-answers .unknown-answer{padding:14px;gap:10px}
+  .visual-answers .unknown-answer .answer-copy strong{font-size:13px}
+  .visual-answers .unknown-answer .answer-copy small{font-size:11px}
+  .visual-prompt{font-size:12px;margin-bottom:5px}
+  .visual-casting-note{font-size:11px;line-height:2;margin-bottom:16px}
+}

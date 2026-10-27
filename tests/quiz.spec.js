@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import * as story from '../src/story.js';
+import { choiceScenes, storySheets } from '../src/choice-scenes.js';
 
 const STORAGE_KEY = 'crush-cinema:v2';
 const hash = value => createHash('sha256').update(value).digest('hex');
@@ -76,6 +77,78 @@ test('a complete picture story reveals its relationship profile and downloads a 
   await expect(page.locator('.evidence-list li')).toHaveCount(3);
   await expect(page.locator('.context-note')).toContainText('喜欢概率');
   await downloadPoster(page);
+  expect(errors).toEqual([]);
+});
+
+test('every illustrated behaviour option binds the matching narrative, dialogue and decodable scene sheet', async ({ page }) => {
+  test.setTimeout(60_000);
+  const expectedSheets = new Map();
+  for (const theme of Object.keys(storySheets)) {
+    const bytes = await readFile(new URL(`../src/assets/story/${theme}.webp`, import.meta.url));
+    expectedSheets.set(theme, hash(bytes));
+  }
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await begin(page);
+  let visualCount = 0;
+  let optionCount = 0;
+  for (const question of story.scenes) {
+    if (question.visual) {
+      visualCount += 1;
+      await expect(page.locator('.image-answer')).toHaveCount(4);
+      await expect(page.locator('.image-answer .option-art svg')).toHaveCount(4);
+      if (visualCount === 1) {
+        const positions = await page.locator('.image-answer').evaluateAll(options => options.map(option => {
+          const rect = option.getBoundingClientRect();
+          return { x: Math.round(rect.x), y: rect.y };
+        }));
+        expect(new Set(positions.map(position => position.x)).size, 'phone scenes should have one readable image column').toBe(1);
+        expect(positions.every((position, index) => index === 0 || position.y > positions[index - 1].y)).toBe(true);
+      }
+      for (const [index, option] of question.options.entries()) {
+        if (option.signal === null) continue;
+        const narrative = choiceScenes[option.imageKey];
+        expect(narrative, `${question.id} option ${index} has narrative scene metadata`).toBeDefined();
+        const art = page.locator(`[data-answer="${index}"] .option-art > svg`);
+        await expect(art).toHaveAttribute('data-scene-art', option.imageKey);
+        await expect(art.locator('title')).toHaveText(narrative.description);
+        await expect(art.locator('text').first()).toHaveText(narrative.dialogue);
+        const image = art.locator('image');
+        await expect(image).toHaveCount(1);
+        const sheet = storySheets[narrative.theme];
+        const geometry = await image.evaluate(element => Object.fromEntries(
+          ['x', 'y', 'width', 'height'].map(name => [name, Number(element.getAttribute(name))])
+        ));
+        const centerX = (240 - geometry.x) / (geometry.width / sheet.width);
+        const centerY = (160 - geometry.y) / (geometry.height / sheet.height);
+        const right = narrative.index % 2 === 1;
+        const bottom = narrative.index >= 2;
+        expect(centerX, `${option.imageKey} displays its intended sheet column`).toBeGreaterThanOrEqual(right ? sheet.splitX : 0);
+        expect(centerX).toBeLessThan(right ? sheet.width : sheet.splitX);
+        expect(centerY, `${option.imageKey} displays its intended sheet row`).toBeGreaterThanOrEqual(bottom ? sheet.splitY : 0);
+        expect(centerY).toBeLessThan(bottom ? sheet.height : sheet.splitY);
+        const href = await image.getAttribute('href');
+        expect(href.startsWith('data:image/webp;base64,'), 'scene sheets stay embedded for standalone downloads').toBe(true);
+        expect(hash(Buffer.from(href.split(',')[1], 'base64')), `${option.imageKey} uses its own theme sheet`).toBe(expectedSheets.get(narrative.theme));
+        const size = await image.evaluate(async element => {
+          const response = await fetch(element.getAttribute('href'));
+          const bitmap = await createImageBitmap(await response.blob());
+          const dimensions = { width: bitmap.width, height: bitmap.height };
+          bitmap.close();
+          return dimensions;
+        });
+        expect(size, `${option.imageKey} is a valid full-resolution WebP sheet`).toEqual({ width: 1536, height: 1024 });
+        optionCount += 1;
+      }
+      await expectNoHorizontalOverflow(page, `literal scene ${question.id}`);
+    }
+    await page.locator('[data-answer="3"]').click();
+    await page.locator('[data-action="next"]').click();
+  }
+  expect(visualCount).toBe(6);
+  expect(optionCount).toBe(24);
+  await expect(page.locator('main')).toHaveClass('view-result');
   expect(errors).toEqual([]);
 });
 
