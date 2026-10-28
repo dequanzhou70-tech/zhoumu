@@ -27,8 +27,9 @@ test('the packaged standalone HTML runs the entire picture story and exports its
   for (let index = 0; index < scenes.length; index++) {
     await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', String(index + 1));
     if (scenes[index].visual) await expect(page.locator('.image-answer .option-art svg')).toHaveCount(4);
+    await expect(page.locator('main h1')).toHaveText(scenes[index].prompt);
+    await expect(page.locator('[data-action="next"]')).toHaveCount(0);
     await page.locator('[data-answer="3"]').click();
-    await page.locator('[data-action="next"]').click();
   }
   await expect(page.locator('main')).toHaveClass('view-result');
   await expect(page.locator('.result-poster h2')).toHaveText(resultTypes.mutual.title);

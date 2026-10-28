@@ -27,9 +27,9 @@ async function complete(page, choice, checkLayout = false) {
       await expect(page.locator('.unknown-answer .option-art')).toHaveCount(0);
     }
     if (checkLayout) await expectNoHorizontalOverflow(page, `scene ${index + 1}`);
+    await expect(page.locator('main h1')).toHaveText(story.scenes[index].prompt);
+    await expect(page.locator('[data-action="next"]')).toHaveCount(0);
     await page.locator(`[data-answer="${choice}"]`).click();
-    await expect(page.locator(`[data-answer="${choice}"]`)).toHaveAttribute('aria-pressed', 'true');
-    await page.locator('[data-action="next"]').click();
   }
   await expect(page.locator('main')).toHaveClass('view-result');
 }
@@ -68,7 +68,7 @@ test('a complete picture story reveals its relationship profile and downloads a 
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await begin(page);
-  await expect(page.locator('[data-action="next"]')).toBeDisabled();
+  await expect(page.locator('[data-action="next"]')).toHaveCount(0);
   await complete(page, 3);
   await expect(page.locator('.result-poster h2')).toHaveText(story.resultTypes.mutual.title);
   await expect(page.locator('.result-poster [data-profile-art]')).toHaveAttribute('data-profile-art', 'mutual');
@@ -144,7 +144,6 @@ test('every illustrated behaviour option binds the matching narrative, dialogue 
       await expectNoHorizontalOverflow(page, `literal scene ${question.id}`);
     }
     await page.locator('[data-answer="3"]').click();
-    await page.locator('[data-action="next"]').click();
   }
   expect(visualCount).toBe(6);
   expect(optionCount).toBe(24);
@@ -165,34 +164,82 @@ test('unknown answers produce pending observations and useful next steps without
   await expect(page.locator('.plan-step')).toHaveCount(3);
 });
 
-test('going back preserves earlier picture answers and lets the user revise them', async ({ page }) => {
+test('questions show their actual prompt and choices auto-advance without a double-click skipping a question', async ({ page }) => {
+  await begin(page);
+  await expect(page.locator('main h1')).toHaveText(story.scenes[0].prompt);
+  await expect(page.locator('.narrative, .message-scene, .scene-location, .chapter-list, .film-sidebar')).toHaveCount(0);
+  await expect(page.locator('[data-action="next"]')).toHaveCount(0);
+  await page.locator('[data-answer="4"]').click();
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
+  await expect(page.locator('main h1')).toHaveText(story.scenes[1].prompt);
+  await expect(page.locator('main h1')).toBeFocused();
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  await page.locator('[data-answer="0"]').dblclick();
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
+  const saved = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)), STORAGE_KEY);
+  expect(saved.answers).toEqual([4, 0]);
+  // A second native click may hit a different answer after the DOM advances.
+  await page.locator('[data-answer="0"]').dispatchEvent('click', { detail: 2 });
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
+  await expect(page.locator('.answer[aria-pressed="true"]')).toHaveCount(0);
+  expect(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).answers, STORAGE_KEY)).toEqual([4, 0]);
+});
+
+test('going back preserves earlier picture answers and choosing a revised or unchanged answer advances', async ({ page }) => {
   await begin(page);
   await page.locator('[data-answer="1"]').click();
-  await page.locator('[data-action="next"]').click();
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
   await page.locator('[data-answer="2"]').click();
-  await page.locator('[data-action="next"]').click();
   await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
   await page.locator('[data-action="back"]').click();
   await expect(page.locator('[data-answer="2"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('[data-action="back"]').click();
   await expect(page.locator('[data-answer="1"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('[data-answer="3"]').click();
-  await expect(page.locator('[data-answer="1"]')).toHaveAttribute('aria-pressed', 'false');
-  await page.locator('[data-action="next"]').click();
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
   await expect(page.locator('[data-answer="2"]')).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).answers[0], STORAGE_KEY)).toBe(3);
+  await page.locator('[data-answer="2"]').click();
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
+  await expect(page.locator('main h1')).toBeFocused();
 });
 
-test('refresh returns to the landing page and progress resumes only when requested', async ({ page }) => {
+test('the final answer can be reviewed and changed or reconfirmed after an automatic result', async ({ page }) => {
+  const fixture = story.profileExamples.mutual;
+  await restoreResult(page, fixture);
+  await page.locator('[data-action="review-answers"]').click();
+  await expect(page.locator('main')).toHaveClass('view-quiz');
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', String(story.scenes.length));
+  await expect(page.locator('main h1')).toHaveText(story.scenes.at(-1).prompt);
+  const original = fixture.answers.at(-1);
+  await expect(page.locator(`[data-answer="${original}"]`)).toHaveAttribute('aria-pressed', 'true');
+  const revised = original === 0 ? 3 : 0;
+  await page.locator(`[data-answer="${revised}"]`).click();
+  await expect(page.locator('main')).toHaveClass('view-result');
+  expect(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).answers.at(-1), STORAGE_KEY)).toBe(revised);
+  await page.locator('[data-action="review-answers"]').click();
+  await expect(page.locator(`[data-answer="${revised}"]`)).toHaveAttribute('aria-pressed', 'true');
+  await page.locator(`[data-answer="${revised}"]`).click();
+  await expect(page.locator('main')).toHaveClass('view-result');
+  await page.reload();
+  await page.locator('[data-action="resume"]').click();
+  await expect(page.locator('main')).toHaveClass('view-result');
+  expect(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).answers.at(-1), STORAGE_KEY)).toBe(revised);
+});
+
+test('refresh resumes at the next unanswered question only after an explicit request', async ({ page }) => {
   await begin(page);
   await page.locator('[data-answer="2"]').click();
-  await page.locator('[data-action="next"]').click();
   await page.locator('[data-answer="3"]').click();
   await page.reload();
   await expect(page.locator('main')).toHaveClass('view-home');
   await page.locator('[data-action="resume"]').click();
-  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
+  await expect(page.locator('main h1')).toHaveText(story.scenes[2].prompt);
+  await expect(page.locator('.answer[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.locator('[data-action="next"]')).toHaveCount(0);
+  await page.locator('[data-action="back"]').click();
   await expect(page.locator('[data-answer="3"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('[data-action="next"]')).toBeEnabled();
 });
 
 test('starting over asks for confirmation before replacing a saved attempt', async ({ page }) => {
@@ -203,13 +250,16 @@ test('starting over asks for confirmation before replacing a saved attempt', asy
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('dialog')).toContainText('重新开始会清除');
   await page.getByRole('dialog').locator('[data-action="resume"]').click();
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
+  await page.locator('[data-action="back"]').click();
   await expect(page.locator('[data-answer="2"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('[data-action="home"]').click();
   await page.locator('[data-action="start"]').click();
   await page.getByRole('dialog').locator('[data-action="fresh"]').click();
   await expect(page.locator('main')).toHaveClass('view-setup');
   await page.locator('[data-action="begin"]').click();
-  await expect(page.locator('[data-action="next"]')).toBeDisabled();
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '1');
+  await expect(page.locator('[data-action="next"]')).toHaveCount(0);
   await expect(page.locator('.answer[aria-pressed="true"]')).toHaveCount(0);
 });
 
@@ -229,7 +279,8 @@ test('all twelve illustrated profiles can be explored without overwriting the pe
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
   await expect(page.locator('.site-header [data-action="endings"]')).toBeFocused();
-  await expect(page.locator('[data-answer="2"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
+  await expect(page.locator('.answer[aria-pressed="true"]')).toHaveCount(0);
 });
 
 test('six relationship indicators include actionable guidance and transparent academic references', async ({ page }) => {
@@ -284,7 +335,7 @@ test('privacy controls erase answers from the current session', async ({ page })
   expect(await page.evaluate(key => sessionStorage.getItem(key), STORAGE_KEY)).toBeNull();
 });
 
-test('interactive controls can use Enter and Space and keep keyboard focus', async ({ page }) => {
+test('keyboard choices auto-advance to the new prompt and holding Enter does not answer another question', async ({ page }) => {
   await page.goto('/');
   const sound = page.locator('[data-action="sound"]');
   await sound.focus();
@@ -310,17 +361,21 @@ test('interactive controls can use Enter and Space and keep keyboard focus', asy
   await page.keyboard.press('Tab');
   await expect(page.locator('[data-style="还不确定"]')).toBeFocused();
   await page.locator('[data-action="begin"]').click();
-  const first = page.locator('[data-answer="0"]');
-  await first.focus();
-  await page.keyboard.press('Enter');
-  await expect(first).toHaveAttribute('aria-pressed', 'true');
-  await expect(first).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(page.locator('[data-answer="1"]')).toBeFocused();
+  await page.locator('[data-answer="0"]').focus();
+  await page.keyboard.down('Enter');
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
+  await expect(page.locator('main h1')).toHaveText(story.scenes[1].prompt);
+  await expect(page.locator('main h1')).toBeFocused();
+  await page.locator('[data-answer="0"]').focus();
+  await page.keyboard.down('Enter');
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '2');
+  await expect(page.locator('.answer[aria-pressed="true"]')).toHaveCount(0);
+  await page.keyboard.up('Enter');
   await page.keyboard.press('Space');
-  await expect(page.locator('[data-answer="1"]')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('[data-answer="1"]')).toBeFocused();
-  await expect(page.locator('[data-action="next"]')).toBeEnabled();
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3');
+  await expect(page.locator('main h1')).toHaveText(story.scenes[2].prompt);
+  await expect(page.locator('main h1')).toBeFocused();
+  expect(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).answers, STORAGE_KEY)).toEqual([0, 0]);
 });
 
 for (const width of [390, 320]) {

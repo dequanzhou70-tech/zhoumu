@@ -79,12 +79,14 @@ function setupView() {
 function quizView() {
   const scene = scenes[state.current];
   const selected = state.answers[state.current];
-  const option = scene.options[selected];
-  return `<section class="quiz-layout"><aside class="film-sidebar"><button class="back-link" data-action="back">← ${state.current === 0 ? '返回序章' : '上一幕'}</button><div class="eyebrow">NOW PLAYING</div><h2>你们的故事，<br>正在发生。</h2><div class="chapter-list">${[...new Set(scenes.map(s => s.chapterTitle))].map((c, i) => `<div class="chapter ${Number(scene.chapter) === i + 1 ? 'active' : ''} ${Number(scene.chapter) > i + 1 ? 'complete' : ''}"><span>${Number(scene.chapter) > i + 1 ? '✓' : `0${i + 1}`}</span><div><small>CHAPTER 0${i + 1}</small><strong>${c}</strong></div></div>`).join('')}</div><div class="sidebar-note">${sparkle}<p>别替 TA 加戏，<br>也别忽略真实的温柔。</p></div></aside><div class="story-card"><div class="story-progress"><span>片段 <b>${String(state.current + 1).padStart(2, '0')}</b> / ${scenes.length}</span><span>${escape(scene.chapterTitle)}</span></div><div class="progress-track" role="progressbar" aria-label="故事进度" aria-valuenow="${state.current + 1}" aria-valuemin="0" aria-valuemax="${scenes.length}"><span style="width:${(state.current + 1) / scenes.length * 100}%"></span></div><div class="scene-location"><span class="live-dot"></span>${escape(scene.time)} <span>·</span> ${escape(scene.location)}</div><h1>${escape(scene.title)}</h1><p class="narrative">${escape(scene.narrative)}</p>${scene.message ? `<div class="message-scene"><div class="chat-avatar">TA</div><div><span class="message-author">${escape(scene.message.from)}</span><div class="chat-bubble">${escape(scene.message.text)}</div></div><span class="message-star">✳</span></div>` : ''}<h2 class="question">${escape(scene.prompt)}</h2>${scene.visual ? '<p class="visual-prompt">选一幕最像你们的真实相处 ♡</p><p class="visual-casting-note">图中人物仅演绎情境，请代入你和 TA；按发生过的事选择。</p>' : ''}<div class="answer-list ${scene.visual ? 'visual-answers' : ''}" role="group" aria-label="选择最像你们真实经历的情况">${scene.options.map((o, i) => {
+  const hint = state.current === scenes.length - 1
+    ? '按真实经历选择，选完即可查看结果。'
+    : '按真实经历选择，选后自动进入下一题。';
+  return `<section class="quiz-layout quiz-direct"><div class="story-card"><div class="quiz-toolbar"><button class="back-link" data-action="back">← ${state.current === 0 ? '返回设置' : '上一题'}</button><span class="question-counter">第 ${state.current + 1} / ${scenes.length} 题</span></div><div class="progress-track" role="progressbar" aria-label="答题进度" aria-valuenow="${state.current + 1}" aria-valuemin="0" aria-valuemax="${scenes.length}"><span style="width:${(state.current + 1) / scenes.length * 100}%"></span></div><h1 class="question-title">${escape(scene.prompt)}</h1><p class="answer-hint">${hint}</p><div class="answer-list ${scene.visual ? 'visual-answers' : ''}" role="group" aria-label="选择最像你们真实经历的情况">${scene.options.map((o, i) => {
     const visual = scene.visual && o.signal !== null;
     const caption = `<span class="answer-key">${String.fromCharCode(65 + i)}</span><span class="answer-copy"><strong>${escape(o.label)}</strong>${o.detail ? `<small>${escape(o.detail)}</small>` : ''}</span><span class="answer-check">${selected === i ? '✓' : ''}</span>`;
-    return `<button class="answer ${visual ? 'image-answer' : ''} ${selected === i ? 'selected' : ''} ${o.signal === null ? 'unknown-answer' : ''}" data-answer="${i}" aria-pressed="${selected === i}">${visual ? `<span class="option-art">${choiceArt(o.imageKey)}</span><span class="answer-bottom">${caption}</span>` : caption}</button>`;
-  }).join('')}</div><div class="scene-controls"><p class="selection-reaction" role="status">${option ? `${sparkle}<span>${escape(option.reaction || '这一幕，已放进你的电影。')}</span>` : '<span>选择最接近真实情况的一项</span>'}</p><button class="button primary next-button" data-action="next" ${option ? '' : 'disabled'}>${state.current === scenes.length - 1 ? '揭晓我的结局' : '下一幕'} ${arrow}</button></div></div></section>`;
+    return `<button class="answer ${visual ? 'image-answer' : ''} ${selected === i ? 'selected' : ''} ${o.signal === null ? 'unknown-answer' : ''}" data-question="${scene.id}" data-answer="${i}" aria-pressed="${selected === i}">${visual ? `<span class="option-art">${choiceArt(o.imageKey)}</span><span class="answer-bottom">${caption}</span>` : caption}</button>`;
+  }).join('')}</div></div></section>`;
 }
 function tagsMarkup(tags = []) { return `<div class="profile-tags">${tags.map(t => `<span># ${escape(t)}</span>`).join('')}</div>`; }
 function citations(ids = []) {
@@ -98,7 +100,7 @@ function guidanceView(result) {
 }
 function resultView() {
   const result = getResult(state.answers, state.context);
-  return `<section class="result-layout"><div class="result-top"><div class="eyebrow">LOVE PROFILE / 你们此刻的关系画像</div><h1>你的关系属性，出片了。</h1><p>不只看心动浓度，也看看怎样靠近适合你们。</p></div><div class="result-columns"><div class="result-poster" id="result-poster"><div class="poster-top"><span>心动放映室</span><span>RELATIONSHIP PORTRAIT</span></div><span class="profile-code">${escape(result.profileCode)}</span><span class="result-kicker">${escape(result.kicker)}</span><h2>${escape(result.title)}</h2><p class="profile-attribute">${escape(result.relationshipAttribute)}</p>${tagsMarkup(result.tags)}<div class="result-art">${profileArt(result.id)}</div><p class="result-subtitle">${escape(result.subtitle)}</p><blockquote>“${escape(result.quote)}”</blockquote><div class="poster-score"><div><small>剧情升温值</small><strong>${result.score === null ? '待续' : `${result.score}<i>/ 100</i>`}</strong></div><span>${escape(result.confidence)}<small>互动信号 ≠ 喜欢的概率</small></span></div><div class="poster-bottom"><span>YOUR RELATIONSHIP, YOUR OWN PACE.</span>${heart}</div></div><div class="result-detail"><div class="analysis-block"><span class="block-label">01 / 你的属性关键词</span><h2>${escape(result.description)}</h2><p class="context-note">${escape(result.caution)}</p></div><div class="analysis-block"><span class="block-label">02 / 六维互动地图</span><div class="dimension-list">${result.dimensions.map(d => `<div class="dimension"><div><span>${escape(d.label)}</span><span>${d.value === null ? '待观察' : `${d.value} / 100`}</span></div><div class="dimension-track"><i style="width:${d.value ?? 0}%"></i></div></div>`).join('')}</div><ul class="evidence-list">${result.evidence.map(e => `<li>${escape(e)}</li>`).join('')}</ul></div><div class="next-scene"><span>${sparkle} 适合你们的下一幕</span><p>${escape(result.nextStep)}</p></div><div class="result-actions"><button class="button primary" data-action="download">保存关系属性海报 ↓</button><button class="button secondary" data-action="share">邀请朋友测一测 ↗</button></div><button class="restart-link" data-action="restart">换一位主角，重新放映 ↺</button><p class="result-disclaimer">${escape(researchShortNote)}<br>向下查看六维相处建议与参考文献。</p></div></div>${guidanceView(result)}</section>`;
+  return `<section class="result-layout"><div class="result-top"><div class="eyebrow">LOVE PROFILE / 你们此刻的关系画像</div><h1>你的关系属性，出片了。</h1><p>不只看心动浓度，也看看怎样靠近适合你们。</p></div><div class="result-columns"><div class="result-poster" id="result-poster"><div class="poster-top"><span>心动放映室</span><span>RELATIONSHIP PORTRAIT</span></div><span class="profile-code">${escape(result.profileCode)}</span><span class="result-kicker">${escape(result.kicker)}</span><h2>${escape(result.title)}</h2><p class="profile-attribute">${escape(result.relationshipAttribute)}</p>${tagsMarkup(result.tags)}<div class="result-art">${profileArt(result.id)}</div><p class="result-subtitle">${escape(result.subtitle)}</p><blockquote>“${escape(result.quote)}”</blockquote><div class="poster-score"><div><small>剧情升温值</small><strong>${result.score === null ? '待续' : `${result.score}<i>/ 100</i>`}</strong></div><span>${escape(result.confidence)}<small>互动信号 ≠ 喜欢的概率</small></span></div><div class="poster-bottom"><span>YOUR RELATIONSHIP, YOUR OWN PACE.</span>${heart}</div></div><div class="result-detail"><div class="analysis-block"><span class="block-label">01 / 你的属性关键词</span><h2>${escape(result.description)}</h2><p class="context-note">${escape(result.caution)}</p></div><div class="analysis-block"><span class="block-label">02 / 六维互动地图</span><div class="dimension-list">${result.dimensions.map(d => `<div class="dimension"><div><span>${escape(d.label)}</span><span>${d.value === null ? '待观察' : `${d.value} / 100`}</span></div><div class="dimension-track"><i style="width:${d.value ?? 0}%"></i></div></div>`).join('')}</div><ul class="evidence-list">${result.evidence.map(e => `<li>${escape(e)}</li>`).join('')}</ul></div><div class="next-scene"><span>${sparkle} 适合你们的下一幕</span><p>${escape(result.nextStep)}</p></div><div class="result-actions"><button class="button primary" data-action="download">保存关系属性海报 ↓</button><button class="button secondary" data-action="share">邀请朋友测一测 ↗</button></div><div class="result-link-group"><button class="review-link" data-action="review-answers">← 返回修改答案</button><button class="restart-link" data-action="restart">换一位主角，重新放映 ↺</button></div><p class="result-disclaimer">${escape(researchShortNote)}<br>向下查看六维相处建议与参考文献。</p></div></div>${guidanceView(result)}</section>`;
 }
 let modalReturnFocus;
 function openModal(content, className = '') {
@@ -190,10 +192,15 @@ function handleClick(event) {
   if (target.dataset.relation) { state.context.relation = target.dataset.relation; save(); render(); [...app.querySelectorAll('[data-relation]')].find(b => b.dataset.relation === state.context.relation)?.focus({ preventScroll: true }); return; }
   if (target.dataset.style) { state.context.style = target.dataset.style; save(); render(); [...app.querySelectorAll('[data-style]')].find(b => b.dataset.style === state.context.style)?.focus({ preventScroll: true }); return; }
   if (target.dataset.answer !== undefined) {
+    // Ignore repeat clicks and stale option events after a question has changed.
+    if (state.screen !== 'quiz' || event.detail > 1 || target.dataset.question !== scenes[state.current].id) return;
     const index = Number(target.dataset.answer);
-    state.answers[state.current] = index; save(); chime();
-    // Keep keyboard focus on the selected answer after updating its visual state.
-    render(); app.querySelector(`[data-answer="${index}"]`)?.focus({ preventScroll: true }); return;
+    if (!Number.isInteger(index) || !scenes[state.current].options[index]) return;
+    state.answers[state.current] = index;
+    chime();
+    if (state.current < scenes.length - 1) { state.current += 1; go('quiz'); }
+    else go('result');
+    return;
   }
   switch (target.dataset.action) {
     case 'home': state.screen = 'home'; render({ focus: true }); break;
@@ -205,9 +212,7 @@ function handleClick(event) {
     case 'resume': modal.close(); state = loadProgress() || { ...defaults(), screen: 'setup' }; render({ focus: true }); break;
     case 'begin': state.answers = []; state.current = 0; go('quiz'); break;
     case 'back': if (state.current > 0) { state.current -= 1; go('quiz'); } else go('setup'); break;
-    case 'next':
-      if (!scenes[state.current].options[state.answers[state.current]]) return;
-      if (state.current < scenes.length - 1) { state.current += 1; go('quiz'); } else { chime(); go('result'); } break;
+    case 'review-answers': state.current = scenes.length - 1; go('quiz'); break;
     case 'restart': openModal(`<h2 id="modal-title">重新开始一场故事？</h2><p class="modal-intro">建议先保存结局海报。重新放映会清除这次作答。</p><div class="modal-buttons"><button class="button secondary" data-action="close-modal">再看看结局</button><button class="button primary" data-action="fresh">重新放映</button></div>`); break;
     case 'endings': endings(); break;
     case 'sound': sound = !sound; chime(); render(); app.querySelector('[data-action="sound"]')?.focus({ preventScroll: true }); break;
@@ -220,6 +225,10 @@ function handleClick(event) {
   }
 }
 app.addEventListener('click', handleClick);
+app.addEventListener('keydown', event => {
+  // Holding an activation key must not answer a second question after navigation.
+  if (event.repeat && ['Enter', ' '].includes(event.key) && event.target.closest('[data-answer]')) event.preventDefault();
+});
 modal.addEventListener('close', () => { if (modalReturnFocus?.isConnected) modalReturnFocus.focus({ preventScroll: true }); });
 modal.addEventListener('click', event => {
   if (event.target === modal) {
