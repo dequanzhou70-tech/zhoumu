@@ -1,5 +1,10 @@
 import sheet from './boss-sheet.webp?inline';
+import mascotSheet from './mascot-sheet.webp?inline';
 import {types} from './data.js';
+
+export function mascotArt() {
+  return `<svg class="boss-art" viewBox="0 0 100 100" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><image href="${mascotSheet}" width="400" height="200" preserveAspectRatio="none"/></svg>`;
+}
 
 // One local, self-contained sheet; consistent crops are also used in the PNG export.
 export function bossArt(id) {

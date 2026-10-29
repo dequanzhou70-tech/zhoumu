@@ -4,9 +4,9 @@ test('complete observation, download PNG, review, restore and clear private answ
  await page.getByRole('button',{name:'看看我摊上了谁'}).click();
  for(let i=0;i<18;i++){await page.locator('[data-answer="0"]').click();await page.locator('[data-action="next"]').click();}
  await expect(page.getByRole('heading',{name:'找到相处的频道。'})).toBeVisible();
- await expect(page.locator('.result-card h2')).toHaveText('会议召唤师');
+ await expect(page.locator('.result-card h2')).toHaveText('碰碰车');
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'下载风格分享卡'}).click();
- const d=await download;expect(d.suggestedFilename()).toContain('会议召唤师');
+ const d=await download;expect(d.suggestedFilename()).toContain('碰碰车');
  const {readFile}=await import('node:fs/promises');const bytes=await readFile(await d.path());
  expect(bytes.readUInt32BE(16)).toBe(1080);expect(bytes.readUInt32BE(20)).toBe(1440);
  await page.getByRole('button',{name:'回看并修改答案'}).click();
@@ -41,6 +41,8 @@ test('eight leader styles reveal distinct illustrations and export illustrated c
   await page.evaluate(a=>sessionStorage.setItem('leader-manual-v1',JSON.stringify(a)),answers);
   await page.reload();await page.locator('[data-action="resume"]').click();
   await expect(page.locator('.result-card h2')).toHaveText(type.name);
+  await expect(page.locator('.boss-hook')).toHaveText(type.hook);
+  await expect(page.locator('.boss-mantra')).toHaveText(type.mantra);
   await expect(page.locator(`.result-card [data-boss-art="${type.id}"]`)).toBeVisible();
   const pending=page.waitForEvent('download');await page.locator('[data-action="download"]').click();
   const download=await pending;const bytes=await readFile(await download.path());

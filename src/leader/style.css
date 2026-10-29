@@ -10,3 +10,4 @@
 .option .arrow{font-family:Arial,sans-serif;font-variant-emoji:text}
 
 .quiz{touch-action:pan-y}.choice-indicator{margin-left:auto;flex-shrink:0;width:22px;height:22px;border:1.5px solid #d4cbb8;border-radius:50%;display:grid;place-items:center;color:transparent;font-size:13px}.option.selected .choice-indicator{background:#b09a49;border-color:#b09a49;color:white}.swipe-hint{text-align:center;font-size:11px;color:#9b917c;margin:22px 0 0}.next-question{padding:10px 18px}.next-question:disabled{opacity:.4;cursor:default}.option:not(.selected){background:#fffefa;border-color:#e1dbce}
+.boss-hook{font-size:13px;line-height:1.9;color:#97856a;margin:16px 0 0;max-width:430px}.boss-mantra{font-size:18px;color:#6f603a;margin:0 0 15px}.inner-thought{font-size:12px;color:#9b8e76;line-height:1.8;margin-bottom:22px}@media(max-width:800px){.boss-hook{font-size:12px}.boss-mantra{font-size:16px}.result-card h2{font-size:29px}}
