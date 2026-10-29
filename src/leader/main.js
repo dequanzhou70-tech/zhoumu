@@ -4,9 +4,11 @@ import {types,questions,evaluate} from './data.js';
 const app=document.querySelector('#app');
 let answers=[],step=0,view='home',selectedType=null;
 let transitioning = false;
+let savedAnswers = [];
+let suppressClickUntil = 0;
 const key='leader-manual-v1';
-try {const saved=JSON.parse(sessionStorage.getItem(key));if(Array.isArray(saved)&&saved.length<=18)answers=saved.map(a=>Number.isInteger(a)&&a>=0&&a<=4?a:null);}catch{}
-function save(){try{sessionStorage.setItem(key,JSON.stringify(answers));}catch{}}
+try {const saved=JSON.parse(sessionStorage.getItem(key));if(Array.isArray(saved)&&saved.length<=18)savedAnswers=saved.map(a=>Number.isInteger(a)&&a>=0&&a<=4?a:null);}catch{}
+function save(){savedAnswers=[...answers];try{sessionStorage.setItem(key,JSON.stringify(answers));}catch{}}
 const escape=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(label,action,cls='primary')=>`<button class="${cls}" data-action="${action}">${label}</button>`;
 function render(focus=false){
@@ -18,12 +20,12 @@ function render(focus=false){
  main.innerHTML = view==='home' ? home() : view==='quiz' ? quiz() : results(result);
  if(focus){main.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
 }
-function home(){return `<section class="hero doodle-home"><div class="hero-copy"><h1>快来认领<br>你的 <span class="highlight">Boss</span><em>！</em></h1><p class="home-subtitle">18 个职场瞬间，测出 TA 的隐藏画风。<br>顺便领走一份「相处攻略」。</p><div class="hero-actions">${button('看看我摊上了谁 ↗','start')}${answers.length?button('继续上次观察','resume','text-button'):''}</div><p class="home-meta">约 3 分钟 · 无需登录 · 答案仅存本标签页</p></div><div class="home-portrait" aria-hidden="true"><span class="sketch-orbit orbit-one">✦</span>${bossArt('meeting')}<span class="sketch-orbit orbit-two">?</span><span class="portrait-caption">Boss 已就位，等你来认领。</span></div></section>`;}
-function quiz(){const q=questions[step];return `<section class="quiz"><div class="quiz-top"><span class="eyebrow">观察记录 / ${step<6?'日常沟通':step<12?'决策现场':'协作与反馈'}</span><span>${String(step+1).padStart(2,'0')} <span class="muted">/ 18</span></span></div><div class="progress" role="progressbar" aria-label="答题进度" aria-valuemin="0" aria-valuemax="18" aria-valuenow="${step+1}"><i style="width:${(step+1)/18*100}%"></i></div><p class="question-note">回想最近一个月，同一位直属领导的真实行为。</p><h1>${q.prompt}</h1><p class="muted">选择最常见的一种；没有遇到过也没关系。</p><div class="options">${[...q.options.map(o=>o.text),'没有遇到过 / 观察不足'].map((text,i)=>`<button class="option ${answers[step]===i?'selected':''}" data-answer="${i}" ${answers[step]===i?'aria-pressed="true"':'aria-pressed="false"'}><span>${i===4?'—':String.fromCharCode(65+i)}</span><b>${text}</b><span class="arrow" aria-hidden="true">&#8599;&#65038;</span></button>`).join('')}</div><div class="quiz-bottom">${step?button('← 上一题','back','text-button'):button('← 返回首页','home','text-button')}<span class="muted">选择后自动进入下一题</span></div></section>`;}
+function home(){return `<section class="hero doodle-home"><div class="hero-copy"><h1>快来认领<br>你的 <span class="highlight">Boss</span><em>！</em></h1><p class="home-subtitle">18 个职场瞬间，测出 TA 的隐藏画风。<br>顺便领走一份「相处攻略」。</p><div class="hero-actions">${button('看看我摊上了谁 ↗','start')}${savedAnswers.length?button('继续上次观察','resume','text-button'):''}</div><p class="home-meta">约 3 分钟 · 无需登录 · 答案仅存本标签页</p></div><div class="home-portrait" aria-hidden="true"><span class="sketch-orbit orbit-one">✦</span>${bossArt('meeting')}<span class="sketch-orbit orbit-two">?</span><span class="portrait-caption">Boss 已就位，等你来认领。</span></div></section>`;}
+function quiz(){const q=questions[step];return `<section class="quiz"><div class="quiz-top"><span class="eyebrow">观察记录 / ${step<6?'日常沟通':step<12?'决策现场':'协作与反馈'}</span><span>${String(step+1).padStart(2,'0')} <span class="muted">/ 18</span></span></div><div class="progress" role="progressbar" aria-label="答题进度" aria-valuemin="0" aria-valuemax="18" aria-valuenow="${step+1}"><i style="width:${(step+1)/18*100}%"></i></div><p class="question-note">回想最近一个月，同一位直属领导的真实行为。</p><h1>${q.prompt}</h1><p class="muted">选择最常见的一种；没有遇到过也没关系。</p><div class="options">${[...q.options.map(o=>o.text),'没有遇到过 / 观察不足'].map((text,i)=>`<button class="option ${answers[step]===i?'selected':''}" data-answer="${i}" ${answers[step]===i?'aria-pressed="true"':'aria-pressed="false"'}><span>${i===4?'—':String.fromCharCode(65+i)}</span><b>${text}</b><span class="choice-indicator" aria-hidden="true">${answers[step]===i?"✓":""}</span></button>`).join('')}</div><div class="quiz-bottom">${step?button('← 上一题','back','text-button'):button('← 返回首页','home','text-button')}<button class="secondary next-question" data-action="next" ${Number.isInteger(answers[step])?'':'disabled'}>${step===17?'查看结果':'下一题 →'}</button></div><p class="swipe-hint" role="status">${Number.isInteger(answers[step])?'已选好，向左滑动进入'+(step===17?'结果':'下一题'):'点选答案后，向左滑动继续'} · 右滑返回</p></section>`;}
 function results(r){const t=selectedType?types.find(t=>t.id===selectedType):r.primary;return `<section class="results"><div class="result-heading"><p class="eyebrow">${selectedType?'风格图鉴 / 仅浏览':'YOUR LEADER MANUAL / 观察完成'}</p><h1>${t?'找到相处的频道。':'再多一点观察，少一点猜测。'}</h1><p class="muted">${selectedType?'浏览图鉴不会改变你的作答结果。':`已收集 ${r.known} 条有效观察。类型来自行为线索组合，并非人格诊断。`}</p></div>${t?`<article class="result-card"><div class="result-symbol">${bossArt(t.id)}</div><div><p class="eyebrow">${t.alias} · ${selectedType?'风格图鉴':`${r.primary.score} 条线索指向这一风格`}</p><h2>${t.name}</h2><blockquote>“${t.quote}”</blockquote>${!selectedType&&r.secondary?`<p class="mixed">混合倾向：${r.secondary.name} · ${r.secondary.score} 条线索</p>`:''}</div><span class="result-seal">观察<br>手记</span></article><div class="insight-grid"><article><p class="eyebrow">01 / 读懂偏好</p><h3>TA 可能在意什么</h3><p>${t.strength}</p></article><article><p class="eyebrow">02 / 找到卡点</p><h3>你们容易卡在哪里</h3><p>${t.friction}</p></article></div><section class="guide"><p class="eyebrow">03 / 下次试试看</p><h2>把理解，变成三个小动作。</h2>${t.tips.map((s,i)=>`<div class="tip"><span>0${i+1}</span><p>${s}</p></div>`).join('')}<div class="script"><span>一句可以直接说的话</span><p>“${t.script}”</p>${button('复制这句话 ↗','copy','text-button')}</div></section>${!selectedType?`<details><summary>看看支持这一结果的作答线索</summary>${answers.map((a,i)=>questions[i]?.options[a]?.scores.includes(t.id)?`<div class="evidence"><b>${questions[i].prompt}</b><p>${questions[i].options[a].text}</p></div>`:'').join('')}</details>`:''}`:`<div class="empty-result"><span>⌁</span><h2>目前还不足以判断主要风格</h2><p>至少需要 8 条有效观察，且同一种风格有 3 条线索支持。<br>可以回看答案，或在积累更多真实经历后再来观察。</p></div>`}<div class="result-actions">${t?button('下载风格分享卡 ↓','download'):''}${!selectedType?button('回看并修改答案','review','secondary'):button('返回我的观察','own','secondary')}${button('重新观察','restart','text-button')}${button('清除本次记录','clear','text-button')}</div><aside class="boundary"><b>有些问题，不应只靠你调整沟通。</b><p>如果遇到持续羞辱、威胁、歧视或报复，请考虑保留记录，并向可信赖的人或合适的支持渠道求助。沟通技巧不能保证解决这些问题。</p></aside><p class="disclaimer">本测试为原创职场趣味观察，分类及权重未经心理测量验证。不用于人员评价或职业决策，不对应 MBTI。结果只反映你所选择的场景。</p></section>`;}
 function toast(s){document.querySelector('.toast').textContent=s;setTimeout(()=>{const el=document.querySelector('.toast');if(el)el.textContent='';},2500);}
-// Lock interaction until both animation phases finish; one tap always answers one question.
-async function changeQuestion(change) {
+// Lock navigation until both animation phases finish; selecting an answer never changes the question.
+async function changeQuestion(change, direction = 1) {
  if (transitioning) return;
  transitioning = true;
  const main = document.querySelector('#main');
@@ -36,17 +38,58 @@ async function changeQuestion(change) {
  };
  try {
    lock();
-   await animate([{opacity:1},{opacity:0}], 110);
+   await animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:`translateX(${-direction*18}px)`}], 110);
    change();
    render(true);
    lock();
-   await animate([{opacity:0},{opacity:1}], 170);
+   await animate([{opacity:0,transform:`translateX(${direction*18}px)`},{opacity:1,transform:'translateX(0)'}], 170);
  } finally {
    transitioning = false;
-   main.querySelectorAll('button').forEach(button => { button.disabled = false; });
+   main.querySelectorAll('button').forEach(button => { button.disabled = button.dataset.action === 'next' && !Number.isInteger(answers[step]); });
  }
 }
-app.addEventListener('click',async e=>{if(transitioning || (e.type==='click' && e.detail>1))return;const a=e.target.closest('[data-action]');const option=e.target.closest('[data-answer]');const type=e.target.closest('[data-type]');if(type){selectedType=type.dataset.type;view='result';render(true);return;}if(option){answers[step]=Number(option.dataset.answer);save();option.classList.add('selected');option.setAttribute('aria-pressed','true');await changeQuestion(()=>{if(step<17)step++;else view='result';});return;}if(!a)return;e.preventDefault();switch(a.dataset.action){case'home':view='home';selectedType=null;break;case'start':if(answers.length&&!confirm('重新开始会替换本次记录，确定继续吗？'))return;answers=[];save();step=0;view='quiz';break;case'resume':step=Math.min(answers.length,17);view=answers.length===18?'result':'quiz';selectedType=null;break;case'back':await changeQuestion(()=>{step--;});return;case'review':step=0;view='quiz';break;case'own':selectedType=null;view=answers.length===18?'result':'home';break;case'restart':if(!confirm('确定清除答案并重新观察吗？'))return;answers=[];save();selectedType=null;step=0;view='quiz';break;case'clear':if(!confirm('确定清除本标签页中的作答记录吗？'))return;answers=[];save();selectedType=null;view='home';break;case'copy':{const t=types.find(t=>t.id===selectedType)||evaluate(answers).primary;try{await navigator.clipboard.writeText(t.script);toast('已复制，按你的情境调整后再使用。');}catch{toast('复制不可用，可以长按选中文字。');}return;}case'download':download();return;}render(true);});
+app.addEventListener('click',async e=>{if(transitioning || Date.now()<suppressClickUntil)return;const a=e.target.closest('[data-action]');const option=e.target.closest('[data-answer]');const type=e.target.closest('[data-type]');if(type){selectedType=type.dataset.type;view='result';render(true);return;}if(option){
+ answers[step]=Number(option.dataset.answer);save();
+ document.querySelectorAll('[data-answer]').forEach(item=>{
+   const selected=item===option;
+   item.classList.toggle('selected',selected);
+   item.setAttribute('aria-pressed',String(selected));
+   item.querySelector('.choice-indicator').textContent=selected?'✓':'';
+ });
+ document.querySelector('[data-action="next"]').disabled=false;
+ document.querySelector('.swipe-hint').textContent='已选好，向左滑动继续 · 右滑返回';
+ return;
+}if(!a)return;e.preventDefault();switch(a.dataset.action){case'home':view='home';selectedType=null;break;case'start':answers=[];save();step=0;view='quiz';break;case'resume':answers=[...savedAnswers];step=Math.min(answers.length,17);view=answers.length===18?'result':'quiz';selectedType=null;break;case'back':await navigateQuestion(-1);return;case'next':await navigateQuestion(1);return;case'review':step=0;view='quiz';break;case'own':selectedType=null;view=answers.length===18?'result':'home';break;case'restart':if(!confirm('确定清除答案并重新观察吗？'))return;answers=[];save();selectedType=null;step=0;view='quiz';break;case'clear':if(!confirm('确定清除本标签页中的作答记录吗？'))return;answers=[];save();selectedType=null;view='home';break;case'copy':{const t=types.find(t=>t.id===selectedType)||evaluate(answers).primary;try{await navigator.clipboard.writeText(t.script);toast('已复制，按你的情境调整后再使用。');}catch{toast('复制不可用，可以长按选中文字。');}return;}case'download':download();return;}render(true);});
+async function navigateQuestion(direction) {
+ if(view!=='quiz' || transitioning)return;
+ if(direction<0){if(step>0)await changeQuestion(()=>{step--;},-1);return;}
+ if(!Number.isInteger(answers[step])){toast('请先选择一个答案，再向左滑动');return;}
+ await changeQuestion(()=>{if(step<17)step++;else view='result';},1);
+}
+// Track the axis first: vertical movement remains native page scrolling.
+let gesture=null;
+app.addEventListener('touchstart',event=>{
+ gesture=view==='quiz'&&!transitioning&&event.touches.length===1
+  ? {x:event.touches[0].clientX,y:event.touches[0].clientY,axis:null}:null;
+},{passive:true});
+app.addEventListener('touchmove',event=>{
+ if(!gesture||event.touches.length!==1)return;
+ const dx=event.touches[0].clientX-gesture.x,dy=event.touches[0].clientY-gesture.y;
+ if(!gesture.axis&&Math.max(Math.abs(dx),Math.abs(dy))>12)
+  gesture.axis=Math.abs(dx)>Math.abs(dy)*1.5?'horizontal':'vertical';
+ if(gesture.axis==='horizontal'&&event.cancelable)event.preventDefault();
+},{passive:false});
+app.addEventListener('touchend',event=>{
+ const start=gesture;gesture=null;
+ if(!start||event.changedTouches.length!==1)return;
+ const dx=event.changedTouches[0].clientX-start.x,dy=event.changedTouches[0].clientY-start.y;
+ if(start.axis!=='vertical'&&Math.abs(dx)>=60&&Math.abs(dx)>Math.abs(dy)*1.5){
+  suppressClickUntil=Date.now()+450;
+  if(event.cancelable)event.preventDefault();
+  void navigateQuestion(dx<0?1:-1);
+ }
+},{passive:false});
+app.addEventListener('touchcancel',()=>{gesture=null;},{passive:true});
 async function download(){const t=types.find(t=>t.id===selectedType)||evaluate(answers).primary;if(!t)return;const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1440;const c=canvas.getContext('2d');c.fillStyle='#faf9f5';c.fillRect(0,0,1080,1440);c.strokeStyle='#2d2c29';c.lineWidth=4;c.strokeRect(48,48,984,1344);c.fillStyle='#726d63';c.font='26px sans-serif';c.fillText('领导使用说明书 / BOSS OBSERVATION',100,125);try {await paintBoss(c,t.id,290,175,500,500);} catch {toast('插画加载失败，请重试');return;}c.fillStyle='#e9d77c';c.fillRect(140,724,800,34);c.fillStyle='#2d2c29';c.font='bold 76px sans-serif';c.textAlign='center';c.fillText(t.name,540,750);c.font='34px sans-serif';c.fillText(`“${t.quote}”`,540,830);c.textAlign='left';c.fillStyle='#817548';c.font='27px sans-serif';c.fillText('相处攻略 · 第一条',110,960);c.fillStyle='#2d2c29';c.font='36px sans-serif';wrap(c,t.tips[0],110,1035,840,57);c.font='24px sans-serif';c.fillStyle='#89867d';c.fillText('职场趣味观察 · 非人格或管理能力评估',110,1250);c.fillText('不含作答记录与个人信息',110,1300);canvas.toBlob(blob=>{if(!blob){toast('图片生成失败，请重试');return;}const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=`领导使用说明书-${t.name}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);toast('分享卡已生成');},'image/png');}
 function wrap(c,s,x,y,max,line){let row='';for(const ch of s){if(c.measureText(row+ch).width>max){c.fillText(row,x,y);row='';y+=line;}row+=ch;}c.fillText(row,x,y);}
 render();
