@@ -83,3 +83,17 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 - `.github/workflows/deploy.yml`：GitHub Pages 构建发布。
 
 修改题目后请运行测试；评分应该根据实际选择提供解释，不将未知经历算作冷淡、不把尊重边界等同于恋爱承诺。
+
+## 领导使用说明书（当前网站首页）
+
+当前首页为原创领导风格观察测试：18 道场景题、8 种类型、混合倾向、沟通建议、PNG 分享卡。答案仅存放在本标签页的 sessionStorage，不上传作答记录，无登录和外部服务。
+
+- `src/leader/data.js`：类型、题目、评分；至少 8 条有效观察且最高类型至少 3 条线索才输出画像，次高至少 3 条且分差不超过 2 时显示混合倾向。
+- `src/leader/main.js`、`style.css`：页面、隐私控制与海报。
+- `npm test`：包含原项目测试及新评分测试。
+- `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e`：新首页完整流程与 320/390px 手机布局验证。
+- `npm run package`：输出 `release/领导使用说明书.html`，可独立打开。
+
+`npm ci` 后运行 `npm run dev` 开发；`npm run build` 生成静态 `dist/`，保持相对资源路径，可部署至 GitHub Pages 仓库子路径。main 推送触发现有 Pages 工作流。原恋爱测试源码仍保留，旧版浏览器测试不适用于新首页。
+
+本分类及权重未经心理测量验证，不对应 MBTI，不用于人员评价或职业决策。类型代表所选场景中的行为倾向。公开发布状态需以 GitHub Actions 成功且实际访问站点为准。

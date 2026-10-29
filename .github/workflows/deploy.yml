@@ -1,4 +1,4 @@
-name: Deploy Crush Cinema
+name: Deploy Leader Manual
 
 on:
   push:

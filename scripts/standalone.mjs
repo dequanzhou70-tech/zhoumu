@@ -24,8 +24,8 @@ async function main() {
     readFile(new URL('public/favicon.svg', root), 'utf8'),
   ]);
   await mkdir(new URL('release/', root), { recursive: true });
-  await writeFile(new URL('release/心动放映室.html', root), inlineBundle(html, { js, css, favicon }));
-  console.log('Created release/心动放映室.html — self-contained browser edition.');
+  await writeFile(new URL('release/领导使用说明书.html', root), inlineBundle(html, { js, css, favicon }));
+  console.log('Created release/领导使用说明书.html — self-contained browser edition.');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();
