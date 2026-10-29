@@ -97,3 +97,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 `npm ci` 后运行 `npm run dev` 开发；`npm run build` 生成静态 `dist/`，保持相对资源路径，可部署至 GitHub Pages 仓库子路径。main 推送触发现有 Pages 工作流。原恋爱测试源码仍保留，旧版浏览器测试不适用于新首页。
 
 本分类及权重未经心理测量验证，不对应 MBTI，不用于人员评价或职业决策。类型代表所选场景中的行为倾向。公开发布状态需以 GitHub Actions 成功且实际访问站点为准。
+
+### 简笔画改版
+
+首页采用「快来认领你的 Boss！」，隐藏类型图鉴，结果在完成作答后展示。`src/leader/boss-sheet.webp` 为本地生成的八角色简笔画素材；`illustrations.js` 将同一份素材用于 Logo、首页、结果卡和 Canvas 分享卡。素材通过 Vite 内联，单文件版无需请求外部图片。浏览器测试包含八种结果插画及不同 PNG 的真实下载。

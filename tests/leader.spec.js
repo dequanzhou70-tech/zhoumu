@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 test('complete observation, download PNG, review, restore and clear private answers',async({page})=>{
  await page.goto('/');await expect(page).toHaveTitle(/领导使用说明书/);
- await page.getByRole('button',{name:'开始观察我的领导'}).click();
+ await page.getByRole('button',{name:'看看我摊上了谁'}).click();
  for(let i=0;i<18;i++)await page.locator('[data-answer="0"]').click();
  await expect(page.getByRole('heading',{name:'找到相处的频道。'})).toBeVisible();
  await expect(page.locator('.result-card h2')).toHaveText('会议召唤师');
@@ -16,9 +16,8 @@ test('complete observation, download PNG, review, restore and clear private answ
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'清除本次记录'}).click();
  expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('leader-manual-v1')))).toEqual([]);
 });
-test('unknown answers produce insufficient observation and browsing preserves answers',async({page})=>{
- await page.goto('/');await page.locator('[data-type="original"]').click();await expect(page.locator('.result-card h2')).toHaveText('第一版守护者');
- await page.getByRole('button',{name:'返回我的观察'}).click();await page.locator('[data-action="start"]').click();
+test('homepage hides leader types and unknown answers produce insufficient observation',async({page})=>{
+ await page.goto('/');await expect(page.locator('.type-grid')).toHaveCount(0);await expect(page.getByRole('heading',{level:1})).toContainText('快来认领');await page.locator('[data-action="start"]').click();
  for(let i=0;i<18;i++)await page.locator('[data-answer="4"]').click();
  await expect(page.getByRole('heading',{name:'目前还不足以判断主要风格'})).toBeVisible();
  await expect(page.locator('[data-action="download"]')).toHaveCount(0);
@@ -29,4 +28,22 @@ for(const width of [320,390])test(`mobile ${width}px stays within viewport`,asyn
  await page.locator('[data-action="start"]').click();
  for(let i=0;i<18;i++)await page.locator('[data-answer="0"]').click();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+test('eight leader styles reveal distinct illustrations and export illustrated cards',async({page})=>{
+ const {types,questions}=await import('../src/leader/data.js');
+ const hashes=new Set();
+ const {readFile}=await import('node:fs/promises');
+ const {createHash}=await import('node:crypto');
+ await page.goto('/');
+ for(const type of types){
+  const answers=questions.map(q=>{const i=q.options.findIndex(o=>o.scores.includes(type.id));return i<0?4:i;});
+  await page.evaluate(a=>sessionStorage.setItem('leader-manual-v1',JSON.stringify(a)),answers);
+  await page.reload();await page.locator('[data-action="resume"]').click();
+  await expect(page.locator('.result-card h2')).toHaveText(type.name);
+  await expect(page.locator(`.result-card [data-boss-art="${type.id}"]`)).toBeVisible();
+  const pending=page.waitForEvent('download');await page.locator('[data-action="download"]').click();
+  const download=await pending;const bytes=await readFile(await download.path());
+  expect(bytes.length).toBeGreaterThan(30000);hashes.add(createHash('sha256').update(bytes).digest('hex'));
+ }
+ expect(hashes.size).toBe(8);
 });
