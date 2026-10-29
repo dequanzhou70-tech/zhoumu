@@ -30,6 +30,7 @@ for(const width of [320,390])test(`mobile ${width}px stays within viewport`,asyn
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 test('eight leader styles reveal distinct illustrations and export illustrated cards',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
  const {types,questions}=await import('../src/leader/data.js');
  const hashes=new Set();
  const {readFile}=await import('node:fs/promises');
@@ -46,4 +47,26 @@ test('eight leader styles reveal distinct illustrations and export illustrated c
   expect(bytes.length).toBeGreaterThan(30000);hashes.add(createHash('sha256').update(bytes).digest('hex'));
  }
  expect(hashes.size).toBe(8);
+});
+test('touch starts unanswered and a rapid double tap cannot skip a question',async({browser})=>{
+ const context=await browser.newContext({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+ const page=await context.newPage();await page.goto('/');await page.locator('[data-action="start"]').tap();
+ await expect(page.locator('.option.selected')).toHaveCount(0);
+ await expect(page.locator('[aria-pressed="true"]')).toHaveCount(0);
+ const before=await page.locator('[data-answer="0"]').evaluate(e=>getComputedStyle(e).backgroundColor);
+ await page.locator('[data-answer="0"]').evaluate(e=>{e.click();e.click();});
+ await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow','2');
+ await expect(page.locator('[data-answer="0"]')).toBeEnabled();
+ await expect(page.locator('.option.selected')).toHaveCount(0);
+ expect(await page.locator('[data-answer="0"]').evaluate(e=>getComputedStyle(e).backgroundColor)).toBe(before);
+ expect(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('leader-manual-v1')))).toEqual([0]);
+ await page.locator('[data-action="back"]').tap();
+ await expect(page.locator('[data-answer="0"]')).toHaveAttribute('aria-pressed','true');
+ await context.close();
+});
+test('reduced motion skips animations without losing answers',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/');await page.locator('[data-action="start"]').click();
+ await page.locator('[data-answer="2"]').click();
+ await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow','2');
+ expect(await page.evaluate(()=>document.querySelector('#main').getAnimations().length)).toBe(0);
 });
