@@ -33,7 +33,7 @@ npm run dev
 按终端提示访问开发服务器。无需数据库、后端或 API 密钥。
 
 ```sh
-npm test             # 评分、内容与打包：25 项
+npm test             # 评分、内容与打包：27 项
 npm run build        # 生产站点 -> dist/
 npm run preview      # 预览生产站点
 npm run package      # 额外生成两套体验各自的单文件 HTML
@@ -77,6 +77,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 - `src/main.js`：交互、会话恢复、海报与分享。
 - `src/style.css`：响应式电影票视觉。
 - `src/art.js`：首页本地 SVG 插画。
+- `src/assets/icons/`：心动放映室的粉色爱心电影标识与两套独立 PNG 图标；页头、浏览器和手机桌面图标分别引用本产品资源，构建文件名带内容哈希，避免沿用旧图标缓存。
 - `src/visuals.js`：12 张属性插画。
 - `src/choice-scenes.js`：24 个选项逐一对应的分镜说明、对白和裁切位置。
 - `src/choice-illustrations.js` 与 `src/assets/story/`：6 组生成的剧情画面（共 24 个分镜），内联 WebP，不依赖外部图片服务。

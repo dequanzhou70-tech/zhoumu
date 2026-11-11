@@ -1,5 +1,5 @@
 import './style.css';
-import { heroArt, heart, arrow, sparkle } from './art.js';
+import { heroArt, heart, arrow, sparkle, crushBrand } from './art.js';
 import { scenes, getResult, resultTypes } from './story.js';
 import { profileArt, profilePalettes } from './visuals.js';
 import { choiceArt } from './choice-illustrations.js';
@@ -54,7 +54,7 @@ function chime() {
   } catch { sound = false; toast('当前浏览器暂不支持音效'); }
 }
 function header() {
-  return `<header class="site-header"><button class="brand" data-action="home" aria-label="心动放映室首页"><span class="brand-icon">${heart}</span><span>心动放映室<small>CRUSH CINEMA</small></span></button><nav aria-label="网站导航"><button class="nav-link" data-action="endings">关系图鉴 <span>↗</span></button><span class="nav-divider"></span><button class="sound-button" data-action="sound" aria-pressed="${sound}" aria-label="${sound ? '关闭' : '开启'}选择音效"><span class="sound-bars ${sound ? 'playing' : ''}"><i></i><i></i><i></i><i></i></span><span>音效${sound ? '开' : '关'}</span></button></nav></header>`;
+  return `<header class="site-header"><button class="brand" data-action="home" aria-label="心动放映室首页"><span class="brand-icon" aria-hidden="true">${crushBrand}</span><span>心动放映室<small>CRUSH CINEMA</small></span></button><nav aria-label="网站导航"><button class="nav-link" data-action="endings">关系图鉴 <span>↗</span></button><span class="nav-divider"></span><button class="sound-button" data-action="sound" aria-pressed="${sound}" aria-label="${sound ? '关闭' : '开启'}选择音效"><span class="sound-bars ${sound ? 'playing' : ''}"><i></i><i></i><i></i><i></i></span><span>音效${sound ? '开' : '关'}</span></button></nav></header>`;
 }
 function footer() {
   return `<footer class="site-footer"><span>为每一个偷偷心动的你，留一张票。</span><div><button data-action="about">关于这场放映</button><span>·</span><button data-action="privacy">隐私说明</button><span class="footer-en">MADE WITH A LITTLE CRUSH ${heart}</span></div></footer>`;

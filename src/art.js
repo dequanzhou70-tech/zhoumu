@@ -1,3 +1,7 @@
+import crushBrand from './assets/icons/crush-icon.svg?raw';
+
+export { crushBrand };
+
 export const heroArt = `<svg class="hero-art" viewBox="0 0 520 460" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="落日下，两个人坐在长椅上，旁边是一颗悄悄靠近的心">
 <defs><linearGradient id="sky" x1="260" y1="40" x2="260" y2="420" gradientUnits="userSpaceOnUse"><stop stop-color="#F4C7D9"/><stop offset="1" stop-color="#FCE6ED"/></linearGradient><pattern id="grain" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".6" fill="#534F39" opacity=".10"/></pattern><clipPath id="scene"><path d="M65 219C65 111 152 46 260 46s195 65 195 173v168H65V219Z"/></clipPath></defs>
 <g clip-path="url(#scene)"><path d="M65 46h390v341H65z" fill="url(#sky)"/><circle cx="337" cy="168" r="59" fill="#DF94B1"/><path d="M32 300c94-95 152-31 213-37 107-11 131-76 245-15v166H32V300Z" fill="#E5B5C8"/><path d="M25 334c113-74 174 16 271-22 78-30 151-34 198 3v111H25v-92Z" fill="#C78DAA"/><path d="M43 382c69-52 122-25 204-14 99 14 172-28 236-1v65H43v-50Z" fill="#AB7591"/><path d="M65 46h390v341H65z" fill="url(#grain)"/>

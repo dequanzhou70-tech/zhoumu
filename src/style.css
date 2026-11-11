@@ -228,3 +228,8 @@ body{background:radial-gradient(ellipse at 85% 7%,#f9dbe74d 0,transparent 38%),v
   .quiz-direct .story-card{padding:21px 16px 23px}
   .quiz-direct .question-title{font-size:22px;line-height:1.7}
 }
+
+/* A dedicated Crush Cinema mark, shared with its browser and home-screen icons. */
+.site-header .brand-icon{width:44px;height:44px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none}
+.site-header .brand-icon svg{width:100%;height:100%}
+@media(max-width:720px){.site-header .brand-icon{width:36px;height:36px}}
