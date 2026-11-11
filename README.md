@@ -1,5 +1,7 @@
 # 心动放映室 · Crush Cinema
 
+固定入口：恋爱测试保留在 `https://dequanzhou70-tech.github.io/zhoumu/`；领导测试位于 `https://dequanzhou70-tech.github.io/zhoumu/boss/`。新增体验应使用独立目录，并在 `vite.config.js` 增加构建入口，不能替换根目录的 `index.html`。两个页面独立加载样式、脚本及会话记录。
+
 一部关于「你和 TA」的轻互动电影。14 个真实相处的观察题（含 6 组剧情图片选择），串起从深夜聊天到下一次邀约的 4 章故事，生成 12 种关系属性画像之一和可下载的专属海报。
 
 - 适配手机与电脑，支持键盘操作与减少动态效果偏好。
@@ -31,10 +33,10 @@ npm run dev
 按终端提示访问开发服务器。无需数据库、后端或 API 密钥。
 
 ```sh
-npm test             # 评分、内容与打包：22 项
+npm test             # 评分、内容与打包：25 项
 npm run build        # 生产站点 -> dist/
 npm run preview      # 预览生产站点
-npm run package      # 额外生成 release/心动放映室.html 单文件版
+npm run package      # 额外生成两套体验各自的单文件 HTML
 ```
 
 单文件版把 CSS、JavaScript、图标和剧情图片都内联，不需要 CDN 资源。带剧情图片的版本约 2.3 MB；构建时的大 JS 分块提示主要来自这些媒体资源。可下载后用允许本地 HTML 的浏览器打开；微信等应用内文件预览器可能不执行脚本，正式传播请使用公开网站链接。
@@ -52,7 +54,7 @@ npm run test:e2e
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 ```
 
-16 项端到端测试覆盖完整答题、未知结局、回退改答、刷新恢复、重开确认、弹窗焦点、隐私清除、键盘操作、手机排版及真实 PNG 下载。
+端到端测试覆盖两个产品入口及完整答题、未知结局、回退改答、刷新恢复、重开确认、弹窗焦点、隐私清除、键盘操作、手机排版及真实 PNG 下载。
 
 ## 发布为公开网站
 
@@ -62,7 +64,7 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 
 1. 将代码推送到 GitHub 仓库的 `main` 分支。
 2. 在 GitHub 仓库 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**。
-3. 打开 **Actions → Deploy Crush Cinema → Run workflow**，选择 `main` 执行。如首次推送时尚未启用 Pages，部署可能失败；启用后重新运行即可。
+3. 打开 **Actions → Deploy Crush Cinema and Boss Manual → Run workflow**，选择 `main` 执行。如首次推送时尚未启用 Pages，部署可能失败；启用后重新运行即可。
 4. 成功后，在工作流的 `github-pages` 环境中打开 GitHub 返回的网址。只有部署成功并实际访问过后，才能确认已上线。
 
 之后推送到 `main` 会自动跑逻辑测试、构建并发布。不需配置网站应用密钥。
@@ -84,17 +86,17 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e
 
 修改题目后请运行测试；评分应该根据实际选择提供解释，不将未知经历算作冷淡、不把尊重边界等同于恋爱承诺。
 
-## 领导使用说明书（当前网站首页）
+## 领导使用说明书（独立入口 /boss/）
 
-当前首页为原创领导风格观察测试：18 道场景题、8 种类型、混合倾向、沟通建议、PNG 分享卡。答案仅存放在本标签页的 sessionStorage，不上传作答记录，无登录和外部服务。
+`/boss/` 为原创领导风格观察测试：18 道场景题、8 种类型、混合倾向、沟通建议、PNG 分享卡。答案仅存放在本标签页的 sessionStorage，不上传作答记录，无登录和外部服务。
 
 - `src/leader/data.js`：类型、题目、评分；至少 8 条有效观察且最高类型至少 3 条线索才输出画像，次高至少 3 条且分差不超过 2 时显示混合倾向。
 - `src/leader/main.js`、`style.css`：页面、隐私控制与海报。
 - `npm test`：包含原项目测试及新评分测试。
-- `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e`：新首页完整流程与 320/390px 手机布局验证。
-- `npm run package`：输出 `release/领导使用说明书.html`，可独立打开。
+- `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npm run test:e2e`：两个独立入口的完整流程与 320/390px 手机布局验证。
+- `npm run package`：同时输出 `release/心动放映室.html` 与 `release/领导使用说明书.html`，均可独立打开。
 
-`npm ci` 后运行 `npm run dev` 开发；`npm run build` 生成静态 `dist/`，保持相对资源路径，可部署至 GitHub Pages 仓库子路径。main 推送触发现有 Pages 工作流。原恋爱测试源码仍保留，旧版浏览器测试不适用于新首页。
+`npm ci` 后运行 `npm run dev` 开发；`npm run build` 生成静态 `dist/`，保持相对资源路径，可部署至 GitHub Pages 仓库子路径。main 推送触发现有 Pages 工作流。根目录保持恋爱测试入口，领导测试位于 `boss/index.html`；两套浏览器测试分别访问各自地址。
 
 本分类及权重未经心理测量验证，不对应 MBTI，不用于人员评价或职业决策。类型代表所选场景中的行为倾向。公开发布状态需以 GitHub Actions 成功且实际访问站点为准。
 
